@@ -1745,7 +1745,10 @@ if ($sipIsLoggedIn) {
             $astDB->orderBy('notesid', 'desc');
             $CNotes = $astDB->getOne('vicidial_call_notes', 'call_notes');
             $call_notes = (!is_null($CNotes['call_notes'])) ? $CNotes['call_notes'] : '';
-            
+            // obtener datos de tabla de Package 
+            if(isset($lead_id)){
+                $packages = getCustomFieldPackage($astDB, $lead_id);
+            }
             $LeaD_InfO = array(
                 'MqueryCID' => (isset($MqueryCID)) ? $MqueryCID : "",
                 'lead_id' => $lead_id,
@@ -1801,7 +1804,8 @@ if ($sipIsLoggedIn) {
                 'ACcount' => $ACcount,
                 'ACcomments' => $ACcomments,
                 'call_notes' => $call_notes,
-                'CBcommentsALL' => $CBcommentsALL
+                'CBcommentsALL' => $CBcommentsALL,
+                'packages' => $packages,
             );
     
             $APIResult = array( "result" => "success", "data" => $LeaD_InfO );
@@ -1818,5 +1822,17 @@ if ($sipIsLoggedIn) {
         $message = "User '$user' does NOT have any phone extension assigned.";
     }
     $APIResult = array( "result" => "error", "message" => $message );
+}
+/**
+ * 
+ * Obtener todos los datos del paquete para custom field
+ * param mysqld $astDB  vicidial
+ */
+function getCustomFieldPackage($astDB, $lead_id) {
+
+    $astDB->where('lead_id', $lead_id);
+    $astDB->where('status', 1);
+    return $rslt = $astDB->get('field_package', null, 'hotel,days,destination,validity');
+
 }
 ?>

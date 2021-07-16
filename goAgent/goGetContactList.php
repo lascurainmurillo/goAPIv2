@@ -67,6 +67,7 @@ foreach ($rslt as $val) {
 if (count($list_ids) > 0 ) {
     $astDB->where('vl.list_id', $list_ids, 'in');
     $astDB->where('vl.status', array('DNC', 'DNCL'), 'not in');
+    $astDB->orderBy("last_local_call_time","desc");
     if (strlen($search_string) >= 3) {
         $astDB->where("CONCAT(first_name,' ',last_name)", "%$search_string%", 'like');
         $astDB->orWhere('phone_number', "%$search_string%", 'like');
@@ -75,7 +76,8 @@ if (count($list_ids) > 0 ) {
         $astDB->orWhere('comments', "%$search_string%", 'like');
     }
     $astDB->join('vicidial_lists vls', 'vls.list_id=vl.list_id', 'left');
-    $rslt = $astDB->get('vicidial_list vl', $limit, 'lead_id,first_name,middle_initial,last_name,phone_number,last_local_call_time,campaign_id,status,comments,phone_code');
+    $astDB->join('vicidial_statuses suses', 'suses.status=vl.status', 'left');
+    $rslt = $astDB->get('vicidial_list vl', $limit, 'lead_id,first_name,middle_initial,last_name,phone_number,last_local_call_time,campaign_id,vl.status,comments,phone_code,suses.status_name,suses.color_background,suses.color_text');
     $lastQuery = $astDB->getLastQuery();
 
     $leads = array();

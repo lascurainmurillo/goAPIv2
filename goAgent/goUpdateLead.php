@@ -179,11 +179,7 @@ if ($is_logged_in) {
 				if (isset($_GET[$label])) { $fields[$label] = $astDB->escape($_GET[$label]); }
 					else if (isset($_POST[$label])) { $fields[$label] = $astDB->escape($_POST[$label]); }
 				
-				$fields[$label] = preg_replace("/\r/i", '', $fields[$label]);
-				$fields[$label] = preg_replace("/\n/i", '!N', $fields[$label]);
-				$fields[$label] = preg_replace("/--AMP--/i", '&', $fields[$label]);
-				$fields[$label] = preg_replace("/--QUES--/i", '?', $fields[$label]);
-				$fields[$label] = preg_replace("/--POUND--/i", '#', $fields[$label]);
+				$fields[$label] = filterField($fields[$label]);
 				
 				if (strlen($fields[$label]) > 0) {
 					$custom_fields_SQL .= "$label,";
@@ -219,6 +215,10 @@ if ($is_logged_in) {
 					$insert_success = $astDB->getRowCount();
 				}
 			}
+			// agregar package en tabla field_package
+			if( (isset($lead_id) && count(@$_POST['packages']) > 0) || @$_POST['packages'] == "") {
+				addCustomFieldPackage($lead_id, $astDB);
+			}
 		}
 		
 		$random = (rand(1000000, 9999999) + 10000000);
@@ -240,5 +240,36 @@ if ($is_logged_in) {
     }
 } else {
     $APIResult = array( "result" => "error", "message" => "Agent '$goUser' is currently NOT logged in" );
+}
+function filterField($fields) {
+	$fields = trim($fields);
+	$fields = preg_replace("/\r/i", '', $fields);
+	$fields = preg_replace("/\n/i", '!N', $fields);
+	$fields = preg_replace("/--AMP--/i", '&', $fields);
+	$fields = preg_replace("/--QUES--/i", '?', $fields);
+	$fields = preg_replace("/--POUND--/i", '#', $fields);
+
+	return $fields;
+}
+
+/**
+ * 
+ * Se agrega packages Field Personalizado
+ * param Int $lead_id
+ * param mysqld $astDB  vicidial
+ */
+function addCustomFieldPackage($lead_id, $astDB){
+
+	$packages = $_POST['packages'];
+	$astDB->where('lead_id', $lead_id);
+    $query = $astDB->delete('field_package');
+	if($packages != ""){
+		foreach($packages as $key => $value){
+			$newvalue = array_map("filterField", $value);
+			$newvalue['lead_id'] = $lead_id;
+			$query = $astDB->insert('field_package', $newvalue);
+			$newvalue = [];
+		}
+	}
 }
 ?>
