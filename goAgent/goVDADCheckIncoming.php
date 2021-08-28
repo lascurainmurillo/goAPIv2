@@ -952,6 +952,16 @@ if ($is_logged_in) {
         $CNotes = $astDB->getOne('vicidial_call_notes', 'call_notes');
         $call_notes = (!is_null($CNotes['call_notes'])) ? $CNotes['call_notes'] : '';
 
+        // Obtener datos de la tabla field_package para obtener los Package
+        $packages = [];
+        $astDB->has('field_package');
+        $lastError = $astDB->getLastError();
+        if(strlen($lastError) < 1) {
+            $astDB->where('lead_id', $lead_id);
+            $packages = $astDB->get('field_package', 100, 'hotel,days,destination,validity');
+            $packages = (@$packages) ? $packages : [];
+        }
+
         $LeaD_InfO = array(
             'callerid' => $callerid,
             'lead_id' => $lead_id,
@@ -1010,6 +1020,7 @@ if ($is_logged_in) {
             'CBcommentsALL' => $CBcommentsALL,
             'social_form_id' => $social_form_id, // id del formulario lead
             'social_form_data' => $social_form_data, // data del formulario lead
+            'packages' => $packages,
         );
 
         $wait_sec = 0;
